@@ -1,0 +1,53 @@
+/*
+Create a class with a static Boolean variable with default value true. In the trigger, before executing your code keep a
+check that the variable is true or not. Once you check make the variable false
+*/
+
+//Apex Class with Static Variable
+public class LeadTriggerHandler
+{
+     public static Boolean isFirstTime = true;// sets the variable to true
+}
+
+
+//Trigger Code
+trigger RunAssignmentRule on Lead (after insert, after update) 
+{
+
+	if(LeadTriggerHandler.isFirstTime)//Checks the static boolean variable
+    {
+		LeadTriggerHandler.isFirstTime = false;//Sets the variable to false to avoid recursion
+		//sample code to be exicuted
+		List<Lead> ls = new List<Lead>();
+		for (Lead l : Trigger.new) {
+			if (l.recordtypeid == '01230000000wz8S' || l.recordtypeid == '012a0000001RMO6')  {
+				ls.add(new Lead(id = l.id));
+			}
+		}
+
+		Database.DMLOptions dmo = new Database.DMLOptions();
+		dmo.assignmentRuleHeader.useDefaultRule = true;
+		Database.update(ls, dmo);
+	}	
+}
+
+
+//Apex Class 
+public class checkRecursive {
+     public static Set<Id> SetOfIDs = new Set<Id>();// Sets the new variable 
+}
+
+//Trigger Code 
+trigger TestTrigger on Account (before insert) {
+    if (Trigger.isAfter && Trigger.isInsert) {
+        List<Account> accList = new List<Account>();
+      for (Account test: Trigger.new) {
+          If(!checkRecursive.SetOfIDs.contains(test.Id)){//Test is the IDs match
+              test.Name = 'helloworld'; 
+              accList.add(test);
+            checkRecursive.SetOfIDs.add(test.Id);//Set the IDs to make them match
+          }
+      }
+      insert  accList;
+    }
+}
